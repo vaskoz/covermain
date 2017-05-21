@@ -44,13 +44,16 @@ func main() {
 }
 
 func CamelcaseToLowercase(camel string) string {
+	if camel == "" {
+		return ""
+	}
 	var result []rune
-	for i, r := range camel {
-		if i != 0 && unicode.IsUpper(r) {
+	for _, r := range camel {
+		if unicode.IsUpper(r) {
 			result = append(result, '_')
+			r = unicode.ToLower(r)
 		}
-		r := unicode.ToLower(r)
 		result = append(result, r)
 	}
-	return string(result)
+	return string(result[1:])
 }
