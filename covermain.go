@@ -6,6 +6,7 @@ import (
 	"os"
 	"text/template"
 	"unicode"
+	"unicode/utf8"
 )
 
 var stderr io.Writer = os.Stderr
@@ -27,6 +28,11 @@ type TestName struct {
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Fprintf(stderr, "Usage: %s CamelCaseNoSpacesName\n", os.Args[0])
+		return
+	}
+	r, _ := utf8.DecodeRuneInString(os.Args[1])
+	if !unicode.IsUpper(r) {
+		fmt.Fprintf(stderr, "Usage: %s CamelCaseNoSpacesName (start with uppercase)\n", os.Args[0])
 		return
 	}
 	var err error

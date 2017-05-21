@@ -37,11 +37,24 @@ func BenchmarkCamelcaseToLowercase(b *testing.B) {
 }
 
 // Can't be run in parallel due to global state mutation
+func TestCoverMainBadName(t *testing.T) {
+	buff := new(bytes.Buffer)
+	stderr = buff
+	os.Args = append(os.Args[:1], "lower")
+	main()
+	out := buff.String()
+	expected := "start with uppercase"
+	if !strings.Contains(out, expected) {
+		t.Errorf("Expected a different usage message for a bad name")
+	}
+}
+
+// Can't be run in parallel due to global state mutation
 func TestCoverMainBadSource(t *testing.T) {
 	source = `{{ nope }}`
 	buff := new(bytes.Buffer)
 	stderr = buff
-	os.Args = os.Args[:2]
+	os.Args = append(os.Args[:1], "Upper")
 	main()
 	out := buff.String()
 	expected := "Can't parse source file template\n"
@@ -56,7 +69,7 @@ func TestCoverMainBadTests(t *testing.T) {
 	tests = `{{ nope }}`
 	buff := new(bytes.Buffer)
 	stderr = buff
-	os.Args = os.Args[:2]
+	os.Args = append(os.Args[:1], "Upper")
 	main()
 	out := buff.String()
 	expected := "Can't parse test file template\n"
