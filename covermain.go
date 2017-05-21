@@ -12,6 +12,14 @@ var stderr io.Writer = os.Stderr
 var source string = sourceString
 var tests string = testString
 
+var mkdir = func(dirname string) error {
+	return os.Mkdir(dirname, os.ModePerm)
+}
+
+var createFile = func(filename string) (io.Writer, error) {
+	return os.Create(filename)
+}
+
 type TestName struct {
 	Name string
 }
@@ -36,9 +44,9 @@ func main() {
 		return
 	}
 	dirname := CamelcaseToLowercase(os.Args[1])
-	os.Mkdir(dirname, os.ModePerm)
-	sourceFile, err := os.Create(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
-	testFile, err := os.Create(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
+	mkdir(dirname)
+	sourceFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
+	testFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
 	sourceTemplate.Execute(sourceFile, TestName{os.Args[1]})
 	testTemplate.Execute(testFile, TestName{os.Args[1]})
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -39,6 +41,7 @@ func TestCoverMainBadSource(t *testing.T) {
 	source = `{{ nope }}`
 	buff := new(bytes.Buffer)
 	stderr = buff
+	os.Args = os.Args[:2]
 	main()
 	out := buff.String()
 	expected := "Can't parse source file template\n"
@@ -53,6 +56,7 @@ func TestCoverMainBadTests(t *testing.T) {
 	tests = `{{ nope }}`
 	buff := new(bytes.Buffer)
 	stderr = buff
+	os.Args = os.Args[:2]
 	main()
 	out := buff.String()
 	expected := "Can't parse test file template\n"
@@ -86,5 +90,80 @@ func TestCoverMainTooFewArguments(t *testing.T) {
 	}
 }
 
+var testcases = []struct {
+	name string
+}{
+	{"AGreatProject"},
+	{"SomeProject"},
+	{"HttpProject"},
+}
+
+func TestCoverMain(t *testing.T) {
+	originalMkdir := mkdir
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		return stderr, nil
+	}
+	mkdir = func(dirname string) error {
+		return nil
+	}
+	for _, c := range testcases {
+		buff := new(bytes.Buffer)
+		stderr = buff
+		os.Args = append(os.Args[:1], c.name)
+		main()
+		out := buff.String()
+		if !strings.Contains(out, fmt.Sprintf("Test%s", c.name)) {
+			t.Errorf("%s does not contain Test%s", out, c.name)
+		}
+		if !strings.Contains(out, fmt.Sprintf("Benchmark%s", c.name)) {
+			t.Errorf("%s does not contain Benchmark%s", out, c.name)
+		}
+	}
+	createFile = originalCreateFile
+	mkdir = originalMkdir
+}
+
 func BenchmarkCoverMain(b *testing.B) {
+	originalMkdir := mkdir
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		return stderr, nil
+	}
+	mkdir = func(dirname string) error {
+		return nil
+	}
+	for i := 0; i < b.N; i++ {
+		for _, c := range testcases {
+			buff := new(bytes.Buffer)
+			stderr = buff
+			os.Args = append(os.Args[:1], c.name)
+			main()
+		}
+	}
+	createFile = originalCreateFile
+	mkdir = originalMkdir
+}
+
+func TestCoverMainIntegration(t *testing.T) {
+	for _, c := range testcases {
+		buff := new(bytes.Buffer)
+		stderr = buff
+		os.Args = append(os.Args[:1], c.name)
+		main()
+		out := buff.String()
+		if out != "" {
+			t.Errorf("STDERR should be empty on successful run")
+		}
+		dirname := CamelcaseToLowercase(c.name)
+		filename := fmt.Sprintf("%[1]s/%[1]s.go", dirname)
+		filename_test := fmt.Sprintf("%[1]s/%[1]s_test.go", dirname)
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			t.Errorf("Source file should exist")
+		}
+		if _, err := os.Stat(filename_test); os.IsNotExist(err) {
+			t.Errorf("Test file should exist")
+		}
+		os.RemoveAll(dirname)
+	}
 }
