@@ -49,7 +49,7 @@ func main() {
 		fmt.Fprintln(stderr, "Can't parse test file template")
 		return
 	}
-	dirname := CamelcaseToLowercase(os.Args[1])
+	dirname := CamelcaseToSnakecase(os.Args[1])
 	mkdir(dirname)
 	sourceFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
 	testFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
@@ -57,7 +57,7 @@ func main() {
 	testTemplate.Execute(testFile, TestName{os.Args[1]})
 }
 
-func CamelcaseToLowercase(camel string) string {
+func CamelcaseToSnakecase(camel string) string {
 	if camel == "" {
 		return ""
 	}

@@ -19,19 +19,19 @@ var ccTestcases = []struct {
 	{"", ""},
 }
 
-func TestCamelcaseToLowercase(t *testing.T) {
+func TestCamelcaseToSnakecase(t *testing.T) {
 	t.Parallel()
 	for _, c := range ccTestcases {
-		if out := CamelcaseToLowercase(c.in); out != c.out {
+		if out := CamelcaseToSnakecase(c.in); out != c.out {
 			t.Errorf("%s does not equal expected %s", out, c.out)
 		}
 	}
 }
 
-func BenchmarkCamelcaseToLowercase(b *testing.B) {
+func BenchmarkCamelcaseToSnakecase(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, c := range ccTestcases {
-			CamelcaseToLowercase(c.in)
+			CamelcaseToSnakecase(c.in)
 		}
 	}
 }
@@ -168,7 +168,7 @@ func TestCoverMainIntegration(t *testing.T) {
 		if out != "" {
 			t.Errorf("STDERR should be empty on successful run")
 		}
-		dirname := CamelcaseToLowercase(c.name)
+		dirname := CamelcaseToSnakecase(c.name)
 		filename := fmt.Sprintf("%[1]s/%[1]s.go", dirname)
 		filename_test := fmt.Sprintf("%[1]s/%[1]s_test.go", dirname)
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
