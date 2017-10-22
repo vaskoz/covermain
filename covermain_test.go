@@ -105,9 +105,35 @@ func TestCoverMainTooFewArguments(t *testing.T) {
 }
 
 // Can't be run in parallel due to global state mutation
+func TestCoverMainCantCreateDirectory(t *testing.T) {
+	os.Args = append(os.Args[:1], "CantCreateSourceFile")
+	buff := new(bytes.Buffer)
+	originalMkdir := mkdir
+	mkdir = func(dirname string) error {
+		return errors.New("can't create directory")
+	}
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		return stdout, nil
+	}
+	stderr = buff
+	main()
+	out := buff.String()
+	if !strings.Contains(out, "Could not create directory") {
+		t.Errorf("Can't create directory")
+	}
+	createFile = originalCreateFile
+	mkdir = originalMkdir
+}
+
+// Can't be run in parallel due to global state mutation
 func TestCoverMainCantCreateSourceFile(t *testing.T) {
 	os.Args = append(os.Args[:1], "CantCreateSourceFile")
 	buff := new(bytes.Buffer)
+	originalMkdir := mkdir
+	mkdir = func(dirname string) error {
+		return nil
+	}
 	originalCreateFile := createFile
 	createFile = func(filename string) (io.Writer, error) {
 		if !strings.Contains(filename, "_test.go") {
@@ -122,12 +148,17 @@ func TestCoverMainCantCreateSourceFile(t *testing.T) {
 		t.Errorf("Can't create source file")
 	}
 	createFile = originalCreateFile
+	mkdir = originalMkdir
 }
 
 // Can't be run in parallel due to global state mutation
 func TestCoverMainCantCreateTestFile(t *testing.T) {
 	os.Args = append(os.Args[:1], "CantCreateTestFile")
 	buff := new(bytes.Buffer)
+	originalMkdir := mkdir
+	mkdir = func(dirname string) error {
+		return nil
+	}
 	originalCreateFile := createFile
 	createFile = func(filename string) (io.Writer, error) {
 		if strings.Contains(filename, "_test.go") {
@@ -142,6 +173,7 @@ func TestCoverMainCantCreateTestFile(t *testing.T) {
 		t.Errorf("Can't create test file")
 	}
 	createFile = originalCreateFile
+	mkdir = originalMkdir
 }
 
 // Can't be run in parallel due to global state mutation
@@ -149,6 +181,10 @@ func TestCoverMainCantWriteTemplates(t *testing.T) {
 	os.Args = append(os.Args[:1], "CantWriteTemplates")
 	buff := new(bytes.Buffer)
 	originalCreateFile := createFile
+	originalMkdir := mkdir
+	mkdir = func(dirname string) error {
+		return nil
+	}
 	createFile = func(filename string) (io.Writer, error) {
 		return nil, nil
 	}
@@ -166,6 +202,7 @@ func TestCoverMainCantWriteTemplates(t *testing.T) {
 		t.Errorf("Can't parse test file template")
 	}
 	createFile = originalCreateFile
+	mkdir = originalMkdir
 	source = originalSource
 	tests = originalTest
 }
