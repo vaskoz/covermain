@@ -9,17 +9,18 @@ import (
 	"unicode/utf8"
 )
 
-var stderr io.Writer = os.Stderr
-var source = sourceString
-var tests = testString
-
-var mkdir = func(dirname string) error {
-	return os.Mkdir(dirname, os.ModePerm)
-}
-
-var createFile = func(filename string) (io.Writer, error) {
-	return os.Create(filename)
-}
+var (
+	stderr io.Writer = os.Stderr
+	stdout io.Writer = os.Stdout
+	source           = sourceString
+	tests            = testString
+	mkdir            = func(dirname string) error {
+		return os.Mkdir(dirname, os.ModePerm)
+	}
+	createFile = func(filename string) (io.Writer, error) {
+		return os.Create(filename)
+	}
+)
 
 type testName struct {
 	Name string
@@ -57,7 +58,8 @@ func main() {
 	var sourceFile, testFile io.Writer
 	sourceFile, err = createFile(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
 	if err != nil {
-		fmt.Fprintln(stderr, "Can't create source file")
+		fmt.Fprintln(stderr, "Can't create source file. Redirecting output to STDOUT")
+		sourceFile = stdout
 	}
 	testFile, err = createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
 	if err != nil {

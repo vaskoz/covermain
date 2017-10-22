@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -103,6 +104,26 @@ func TestCoverMainTooFewArguments(t *testing.T) {
 	}
 }
 
+// Can't be run in parallel due to global state mutation
+func TestCoverMainCantCreateSourceFile(t *testing.T) {
+	os.Args = append(os.Args[:1], "CantCreateSourceFile")
+	buff := new(bytes.Buffer)
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		if !strings.Contains(filename, "_test.go") {
+			return nil, errors.New("Can't create source file")
+		}
+		return stdout, nil
+	}
+	stderr = buff
+	main()
+	out := buff.String()
+	if !strings.Contains(out, "Can't create source file. Redirecting output to STDOUT") {
+		t.Errorf("Can't create source file")
+	}
+	createFile = originalCreateFile
+}
+
 var testcases = []struct {
 	name string
 }{
@@ -112,8 +133,8 @@ var testcases = []struct {
 }
 
 func TestCoverMain(t *testing.T) {
-	originalMkdir := mkdir
 	originalCreateFile := createFile
+	originalMkdir := mkdir
 	createFile = func(filename string) (io.Writer, error) {
 		return stderr, nil
 	}
@@ -133,13 +154,13 @@ func TestCoverMain(t *testing.T) {
 			t.Errorf("%s does not contain Benchmark%s", out, c.name)
 		}
 	}
-	createFile = originalCreateFile
 	mkdir = originalMkdir
+	createFile = originalCreateFile
 }
 
 func BenchmarkCoverMain(b *testing.B) {
-	originalMkdir := mkdir
 	originalCreateFile := createFile
+	originalMkdir := mkdir
 	createFile = func(filename string) (io.Writer, error) {
 		return stderr, nil
 	}
@@ -154,8 +175,8 @@ func BenchmarkCoverMain(b *testing.B) {
 			main()
 		}
 	}
-	createFile = originalCreateFile
 	mkdir = originalMkdir
+	createFile = originalCreateFile
 }
 
 func TestCoverMainIntegration(t *testing.T) {
