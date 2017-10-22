@@ -144,6 +144,32 @@ func TestCoverMainCantCreateTestFile(t *testing.T) {
 	createFile = originalCreateFile
 }
 
+// Can't be run in parallel due to global state mutation
+func TestCoverMainCantWriteTemplates(t *testing.T) {
+	os.Args = append(os.Args[:1], "CantWriteTemplates")
+	buff := new(bytes.Buffer)
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		return nil, nil
+	}
+	originalSource := source
+	source = "{{.Foobar}}"
+	originalTest := tests
+	tests = "{{.Foobar}}"
+	stderr = buff
+	main()
+	out := buff.String()
+	if !strings.Contains(out, "Couldn't write to source file") {
+		t.Errorf("Can't parse source file template")
+	}
+	if !strings.Contains(out, "Couldn't write to test file") {
+		t.Errorf("Can't parse test file template")
+	}
+	createFile = originalCreateFile
+	source = originalSource
+	tests = originalTest
+}
+
 var testcases = []struct {
 	name string
 }{
