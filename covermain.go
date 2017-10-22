@@ -10,8 +10,8 @@ import (
 )
 
 var stderr io.Writer = os.Stderr
-var source string = sourceString
-var tests string = testString
+var source = sourceString
+var tests = testString
 
 var mkdir = func(dirname string) error {
 	return os.Mkdir(dirname, os.ModePerm)
@@ -21,7 +21,7 @@ var createFile = func(filename string) (io.Writer, error) {
 	return os.Create(filename)
 }
 
-type TestName struct {
+type testName struct {
 	Name string
 }
 
@@ -49,15 +49,31 @@ func main() {
 		fmt.Fprintln(stderr, "Can't parse test file template")
 		return
 	}
-	dirname := CamelcaseToSnakecase(os.Args[1])
-	mkdir(dirname)
-	sourceFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
-	testFile, err := createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
-	sourceTemplate.Execute(sourceFile, TestName{os.Args[1]})
-	testTemplate.Execute(testFile, TestName{os.Args[1]})
+	dirname := camelcaseToSnakecase(os.Args[1])
+	err = mkdir(dirname)
+	if err != nil {
+		fmt.Fprintln(stderr, "Could not create directory")
+	}
+	var sourceFile, testFile io.Writer
+	sourceFile, err = createFile(fmt.Sprintf("%[1]s/%[1]s.go", dirname))
+	if err != nil {
+		fmt.Fprintln(stderr, "Can't create source file")
+	}
+	testFile, err = createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
+	if err != nil {
+		fmt.Fprintln(stderr, "Can't create test file")
+	}
+	err = sourceTemplate.Execute(sourceFile, testName{os.Args[1]})
+	if err != nil {
+		fmt.Fprintln(stderr, "Couldn't write to source file")
+	}
+	err = testTemplate.Execute(testFile, testName{os.Args[1]})
+	if err != nil {
+		fmt.Fprintln(stderr, "Couldn't write to test file")
+	}
 }
 
-func CamelcaseToSnakecase(camel string) string {
+func camelcaseToSnakecase(camel string) string {
 	if camel == "" {
 		return ""
 	}

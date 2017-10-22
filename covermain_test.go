@@ -22,7 +22,7 @@ var ccTestcases = []struct {
 func TestCamelcaseToSnakecase(t *testing.T) {
 	t.Parallel()
 	for _, c := range ccTestcases {
-		if out := CamelcaseToSnakecase(c.in); out != c.out {
+		if out := camelcaseToSnakecase(c.in); out != c.out {
 			t.Errorf("%s does not equal expected %s", out, c.out)
 		}
 	}
@@ -31,7 +31,7 @@ func TestCamelcaseToSnakecase(t *testing.T) {
 func BenchmarkCamelcaseToSnakecase(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, c := range ccTestcases {
-			CamelcaseToSnakecase(c.in)
+			camelcaseToSnakecase(c.in)
 		}
 	}
 }
@@ -168,15 +168,18 @@ func TestCoverMainIntegration(t *testing.T) {
 		if out != "" {
 			t.Errorf("STDERR should be empty on successful run")
 		}
-		dirname := CamelcaseToSnakecase(c.name)
+		dirname := camelcaseToSnakecase(c.name)
 		filename := fmt.Sprintf("%[1]s/%[1]s.go", dirname)
-		filename_test := fmt.Sprintf("%[1]s/%[1]s_test.go", dirname)
+		filenameTest := fmt.Sprintf("%[1]s/%[1]s_test.go", dirname)
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			t.Errorf("Source file should exist")
 		}
-		if _, err := os.Stat(filename_test); os.IsNotExist(err) {
+		if _, err := os.Stat(filenameTest); os.IsNotExist(err) {
 			t.Errorf("Test file should exist")
 		}
-		os.RemoveAll(dirname)
+		err := os.RemoveAll(dirname)
+		if err != nil {
+			t.Errorf("Couldn't remove directory used for integration testing")
+		}
 	}
 }
