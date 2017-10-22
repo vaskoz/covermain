@@ -64,6 +64,7 @@ func main() {
 	testFile, err = createFile(fmt.Sprintf("%[1]s/%[1]s_test.go", dirname))
 	if err != nil {
 		fmt.Fprintln(stderr, "Can't create test file")
+		testFile = stdout
 	}
 	err = sourceTemplate.Execute(sourceFile, testName{os.Args[1]})
 	if err != nil {

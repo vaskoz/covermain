@@ -124,6 +124,26 @@ func TestCoverMainCantCreateSourceFile(t *testing.T) {
 	createFile = originalCreateFile
 }
 
+// Can't be run in parallel due to global state mutation
+func TestCoverMainCantCreateTestFile(t *testing.T) {
+	os.Args = append(os.Args[:1], "CantCreateTestFile")
+	buff := new(bytes.Buffer)
+	originalCreateFile := createFile
+	createFile = func(filename string) (io.Writer, error) {
+		if strings.Contains(filename, "_test.go") {
+			return nil, errors.New("Can't create test file")
+		}
+		return stdout, nil
+	}
+	stderr = buff
+	main()
+	out := buff.String()
+	if !strings.Contains(out, "Can't create test file") {
+		t.Errorf("Can't create test file")
+	}
+	createFile = originalCreateFile
+}
+
 var testcases = []struct {
 	name string
 }{
