@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/vaskoz/covermain.svg?branch=master)](https://travis-ci.org/vaskoz/covermain)
+[![Coverage Status](https://coveralls.io/repos/github/vaskoz/covermain/badge.svg?branch=master)](https://coveralls.io/github/vaskoz/covermain?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/vaskoz/covermain)](https://goreportcard.com/report/github.com/vaskoz/covermain)
 [![GoDoc](https://godoc.org/github.com/vaskoz/covermain?status.svg)](https://godoc.org/github.com/vaskoz/covermain)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.txt)
